@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PDF Parser</title>
+  <script src="lib/pdf.min.js"></script>
+  <script src="lib/pdf.worker.min.js"></script>
+  <style>
+    body {
+      width: 400px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    #output {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #parseButton {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #parseButton:hover {
+      background-color: #45a049;
+    }
+    #parseButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h3>PDF Parser</h3>
+  <button id="parseButton">Extract Text from Current PDF</button>
+  <div id="output">Click the button to extract text from the current PDF...</div>
+  <script src="popup.js"></script>
+</body>
+</html>
