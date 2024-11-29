@@ -43,9 +43,11 @@
   </style>
 </head>
 <body>
-  <h3>PDF Parser</h3>
-  <button id="parseButton">Extract Text from Current PDF</button>
-  <div id="output">Click the button to extract text from the current PDF...</div>
-  <script src="popup.js"></script>
+  <h3>PDF AI Copilot</h3>
+  <form id="uploadDocument">
+    <input type="file" id="myFile" name="filename" accept="application/pdf">
+    <input type="submit">
+  </form>
+  <script type="module" src="src/popup.js"></script>
 </body>
 </html>
