@@ -3,7 +3,7 @@ try {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("background add listener");
     if (message.type === 'VIEWER_BLOB_URL') {
-        console.log("received pdf blob");
+        console.log("received pdf blob: ", message);
         chrome.tabs.query({url: 'chrome-extension://*/viewer.html'}, function(tabs) {
             console.log("tabs: ", tabs)
             console.log("background message: ", message);

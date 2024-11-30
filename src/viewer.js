@@ -12,13 +12,13 @@
                 // Send acknowledgment back
                 sendResponse({ received: true });
                 
-                handlePDF(message);
+                handlePDF(message.url);
             }
             return true; // Keep message channel open
         });
     };
 
-    const handlePDF = async (message) => {
+    const handlePDF = async (blob) => {
         try {
             // const pdfjsSrc = chrome.runtime.getURL("src/pdf.mjs");
             const pdfjs = window.pdfjsLib;
@@ -28,9 +28,15 @@
             const pdfWorkerSrc = chrome.runtime.getURL("src/pdf.worker.mjs");
             pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
-            console.log("url message: ", message.url);
+            const uint8Array = new Uint8Array(blob);
+            // console.log("url message: ", message.url);
+            // let blob = await fetch(message.url).then(r => r.blob());
+
+            console.log("loaded blob: ", uint8Array);
+            const arrayBuffer = uint8Array.buffer;
+
             // Load and render the PDF
-            const loadingTask = pdfjs.getDocument(message.url);
+            const loadingTask = pdfjs.getDocument(arrayBuffer);
             const pdf = await loadingTask.promise;
             console.log('PDF loaded');
     

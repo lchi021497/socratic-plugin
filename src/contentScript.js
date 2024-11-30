@@ -7,11 +7,14 @@
     pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
     console.log("contentScript.js init");
-    chrome.runtime.onMessage.addListener((obj, sender, response) => {
+    chrome.runtime.onMessage.addListener(async (obj, sender, response) => {
         const { type, value, videoId } = obj;
 
         console.log("load listener");
         if (type === "LOAD") {
+            console.log("LOAD value: ", value);
+            let blob = await fetch(value).then(r => r.blob());
+            console.log("received blob: ", blob)
             // const uint8Array = new Uint8Array(value);
             // const arrayBuffer = uint8Array.buffer;
 
@@ -43,7 +46,8 @@
                 return new Promise((resolve) => {
                     // First open the window
                     const viewerWindow = window.open(chrome.runtime.getURL('viewer.html'), '_blank');
-                    
+                   
+                    console.log("viewerWindow: ", viewerWindow);
                     // Send a message to background script to watch for the tab
                     chrome.runtime.sendMessage({ 
                         type: 'WATCH_FOR_VIEWER_TAB' 
@@ -59,11 +63,14 @@
             };
 
             console.log('registered waitForTab handler');
-            waitForTab().then((tab) => {
-                console.log("Viewer tab is fully loaded: ", value);
+            waitForTab().then(async (tab) => {
+                const buffer = await blob.arrayBuffer();
+                const uint8Array = new Uint8Array(buffer);
+                const regularArray = Array.from(uint8Array);
+                console.log("sending buffer: ", buffer);
                 chrome.runtime.sendMessage({ 
                     type: 'VIEWER_BLOB_URL', 
-                    url: value 
+                    url: regularArray,
                 });
             }).catch(error => {
                 console.error('Error:', error);

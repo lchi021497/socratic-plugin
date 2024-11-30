@@ -40,7 +40,7 @@ async function handleSubmit(event) {
             activeTab.id, 
             {
                 type: "LOAD",
-                value: blobUrl
+                value: blobUrl 
             }
         );
     } catch (error) {
