@@ -39,30 +39,58 @@
             const loadingTask = pdfjs.getDocument(arrayBuffer);
             const pdf = await loadingTask.promise;
             console.log('PDF loaded');
+
+            // Get total pages
+            const numPages = pdf.numPages;
+            
+            const canvasContainer = document.getElementById("canvas-container");
+            // Render each page
+            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                // Get the page
+                const page = await pdf.getPage(pageNum);
+                
+                // Create canvas for this page
+                const canvas = document.createElement('canvas');
+                canvasContainer.appendChild(canvas);
+                
+                // Set scale
+                const viewport = page.getViewport({ scale: 1.0 });
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                // Render the page
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+            }
+        
+            // // Fetch the first page
+            // const page = await pdf.getPage(1);
+            // console.log('Page loaded');
     
-            // Fetch the first page
-            const page = await pdf.getPage(1);
-            console.log('Page loaded');
+            // const scale = 1.5;
+            // const viewport = page.getViewport({ scale });
     
-            const scale = 1.5;
-            const viewport = page.getViewport({ scale });
+            // // Prepare canvas
+            // const canvas = document.getElementById('the-canvas');
+            // const context = canvas.getContext('2d');
+            // canvas.height = viewport.height;
+            // canvas.width = viewport.width;
     
-            // Prepare canvas
-            const canvas = document.getElementById('the-canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            // // Render PDF page
+            // const renderContext = {
+            //     canvasContext: context,
+            //     viewport: viewport
+            // };
+            // await page.render(renderContext).promise;
+            // console.log('Page rendered');
     
-            // Render PDF page
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            await page.render(renderContext).promise;
-            console.log('Page rendered');
-    
-            // Clean up
-            URL.revokeObjectURL(message.url);
+            // // Clean up
+            // URL.revokeObjectURL(message.url);
         } catch (error) {
             console.error('Error loading PDF:', {
                 message: error.message,
