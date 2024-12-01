@@ -1,0 +1,45 @@
+#pdf-container {
+    width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+.pdf-page {
+    position: relative;
+    margin-bottom: 20px;
+}
+.textLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    opacity: 0.2;
+    line-height: 1.0;
+}
+.textLayer > span {
+    color: transparent;
+    position: absolute;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+}
+.textLayer ::selection {
+    background: rgba(0, 0, 255, 0.3);
+}
+.highlight {
+    position: absolute;
+    background-color: rgba(255, 255, 0, 0.3);
+    cursor: pointer;
+}
+#highlight-list {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 300px;
+    background: white;
+    padding: 10px;
+    border: 1px solid #ccc;
+    max-height: 80vh;
+    overflow-y: auto;
+}

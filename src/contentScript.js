@@ -1,11 +1,4 @@
 (async () => {
-    const pdfjsSrc = chrome.runtime.getURL("src/pdf.mjs");
-    const pdfjs = await import(pdfjsSrc);
-    const pdfWorkerSrc = chrome.runtime.getURL("src/pdf.worker.mjs");
-    // const pdfjsWorker = await import(pdfWorkerSrc);
-
-    pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
-
     console.log("contentScript.js init");
     chrome.runtime.onMessage.addListener(async (obj, sender, response) => {
         const { type, value, videoId } = obj;

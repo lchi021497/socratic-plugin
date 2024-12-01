@@ -2,17 +2,16 @@
 <html>
 <head>
     <title>PDF Viewer</title>
-    <style>
-        #the-canvas {
-            border: 1px solid black;
-            direction: ltr;
-        }
-    </style>
-    <script src="src/pdf.mjs" type="module"></script>
-    <script src="src/pdf.worker.mjs" type="module"></script>
+    <script src="src/pdf.js" type="module"></script>
+    <script src="src/pdf.worker.js" type="module"></script>
+    <link rel="stylesheet" href="src/viewer.css">
 </head>
 <body>
-    <div id="canvas-container"></div>
+    <div id="pdf-container"></div>
+    <div id="highlight-list">
+        <h3>Highlights</h3>
+        <div id="highlights-container"></div>
+      </div>
     <script src="src/viewer.js"></script>
 </body>
 </html>

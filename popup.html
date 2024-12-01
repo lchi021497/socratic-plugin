@@ -3,8 +3,6 @@
 <head>
   <meta charset="utf-8">
   <title>PDF Parser</title>
-  <script src="lib/pdf.min.js"></script>
-  <script src="lib/pdf.worker.min.js"></script>
   <style>
     body {
       width: 400px;
@@ -41,6 +39,8 @@
       cursor: not-allowed;
     }
   </style>
+  <script src="src/pdf.js" type="module"></script>
+  <script src="src/pdf.worker.js" type="module"></script>
 </head>
 <body>
   <h3>PDF AI Copilot</h3>
@@ -48,6 +48,6 @@
     <input type="file" id="myFile" name="filename" accept="application/pdf">
     <input type="submit">
   </form>
-  <script type="module" src="src/popup.js"></script>
+  <script src="src/popup.js" type="module"></script>
 </body>
 </html>
