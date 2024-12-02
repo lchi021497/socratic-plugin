@@ -16,6 +16,7 @@
     overflow: hidden;
     opacity: 0.2;
     line-height: 1.0;
+    --scale-factor: 1.0;
 }
 .textLayer > span {
     color: transparent;
