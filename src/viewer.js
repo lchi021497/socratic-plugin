@@ -1,10 +1,12 @@
 (() => {
+    let isProcessing = false;
     const setupMessageListener = () => {
         console.log("Setting up message listener");
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("Received message in viewer:", message);
             
-            if (message.type === 'VIEWER_BLOB_URL') {
+            if (message.type === 'VIEWER_BLOB_URL' && !isProcessing) {
+                isProcessing = true;
                 console.log("got message: ", message);
                 const pdfBlobURL = message.url;
                 console.log('got pdfBlobURL: ', pdfBlobURL);
@@ -12,7 +14,10 @@
                 // Send acknowledgment back
                 sendResponse({ received: true });
                 
-                handlePDF(message.url);
+                handlePDF(message.url)
+                    .finally(() => {
+                        isProcessing = false;  // Reset flag after processing
+                    });
             }
             return true; // Keep message channel open
         });
@@ -358,6 +363,7 @@
     }
 
     const handlePDF = async (blob) => {
+        console.log("handlePDF");
         try {
             // const pdfjsSrc = chrome.runtime.getURL("src/pdf.js");
             const pdfjs = window.pdfjsLib;
