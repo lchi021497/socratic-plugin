@@ -35,12 +35,80 @@
 }
 #highlight-list {
     position: fixed;
+    right: 340px;
+    top: 20px;
+    width: 300px;
+    background: white;
+    padding: 10px;
+    border: 1px solid #000;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+#chat-box {
+    position: fixed;
     right: 20px;
     top: 20px;
     width: 300px;
     background: white;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #000;
     max-height: 80vh;
     overflow-y: auto;
+}
+.chat-container {
+    max-width: 500px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.chat-box {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.question {
+    background-color: #e3f2fd;
+    margin-left: 20px;
+}
+
+.answer {
+    background-color: #f5f5f5;
+    margin-right: 20px;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1976d2;
 }

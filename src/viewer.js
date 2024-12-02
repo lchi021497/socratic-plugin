@@ -1,4 +1,49 @@
 (() => {
+  const chatBox = document.getElementById('chatBox');
+  const userInput = document.getElementById('userInput');
+  const responses = [
+      "Tell me more about that.",
+      "How does that make you feel?",
+      "What do you think about this situation?",
+      "Can you elaborate on that?",
+      "That's interesting, why do you think that is?",
+      "What would be your ideal solution?"
+  ];
+
+  function sendMessage() {
+      const message = userInput.value.trim();
+      if (message === '') return;
+
+      // Add user's question
+      addMessage(message, 'question');
+
+      // Add bot's answer after a short delay
+      setTimeout(() => {
+          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+          addMessage(randomResponse, 'answer');
+      }, 500);
+
+      // Clear input
+      userInput.value = '';
+  }
+
+  function addMessage(text, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', type);
+      messageDiv.textContent = text;
+      chatBox.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Allow sending message with Enter key
+  userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+          sendMessage();
+      }
+  });
+
     let isProcessing = false;
     const setupMessageListener = () => {
         console.log("Setting up message listener");
