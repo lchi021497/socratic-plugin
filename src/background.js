@@ -12,6 +12,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 url: message.url
             });
         });
+        return true;
     }
     if (message.type === 'WATCH_FOR_VIEWER_TAB') {
         console.log('received WATCH_FOR_VIEWER_TAB');

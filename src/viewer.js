@@ -19,7 +19,7 @@
                         isProcessing = false;  // Reset flag after processing
                     });
             }
-            return true; // Keep message channel open
+            // return true; // Keep message channel open
         });
     };
 
@@ -146,7 +146,6 @@
     class MyHighlightManager {
         constructor() {
             this.highlights = new Map(); // pageNum -> highlights array
-            this.currentPage = 1;
             this.setupListeners();
         }
 
@@ -170,9 +169,14 @@
             if (!selectedText) return;
 
             const rects = range.getClientRects();
-            const textLayer = range.commonAncestorContainer.parentElement.closest('.textLayer');
+            const textLayer = range.commonAncestorContainer.closest('.textLayer');
+            console.log('common ancestor: ', range.commonAncestorContainer);
+            console.log('textLayer: ', textLayer);
             const pdfContainer = document.getElementById('pdf-container');
             const containerRect = pdfContainer.getBoundingClientRect();
+
+            const pdfPage = textLayer.closest('.pdf-page');
+            const pageNumber = parseInt(pdfPage.getAttribute('data-page-number'), 10);
 
             // Create highlight elements
             for (const rect of rects) {
@@ -190,10 +194,10 @@
             }
 
             // Save highlight data
-            if (!this.highlights.has(this.currentPage)) {
-                this.highlights.set(this.currentPage, []);
+            if (!this.highlights.has(pageNumber)) {
+                this.highlights.set(pageNumber, []);
             }
-            this.highlights.get(this.currentPage).push({
+            this.highlights.get(pageNumber).push({
                 id: highlightId,
                 text: selectedText,
                 timestamp: new Date().toISOString()
