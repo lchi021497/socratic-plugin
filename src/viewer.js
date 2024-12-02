@@ -1,48 +1,118 @@
 (() => {
   const chatBox = document.getElementById('chatBox');
-  const userInput = document.getElementById('userInput');
-  const responses = [
-      "Tell me more about that.",
-      "How does that make you feel?",
-      "What do you think about this situation?",
-      "Can you elaborate on that?",
-      "That's interesting, why do you think that is?",
-      "What would be your ideal solution?"
-  ];
+        const userInput = document.getElementById('userInput');
+        const inputHint = document.getElementById('inputHint');
+        let currentMode = 'write';
 
-  function sendMessage() {
-      const message = userInput.value.trim();
-      if (message === '') return;
+        const modeResponses = {
+            write: [
+                "Here's a draft based on your input:",
+                "I've written this for you:",
+                "Here's what I've composed:"
+            ],
+            rewrite: [
+                "Here's a rewritten version:",
+                "I've reformulated your text as:",
+                "Here's the revised version:"
+            ],
+            summarize: [
+                "Here's a summary:",
+                "Key points:",
+                "In brief:"
+            ]
+        };
 
-      // Add user's question
-      addMessage(message, 'question');
+        const modeHints = {
+            write: "Write mode: Express your thoughts naturally",
+            rewrite: "Rewrite mode: Paste the text you want to rephrase",
+            summarize: "Summarize mode: Paste the text you want to condense"
+        };
 
-      // Add bot's answer after a short delay
-      setTimeout(() => {
-          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-          addMessage(randomResponse, 'answer');
-      }, 500);
+        // Mode selection handling
+        document.querySelectorAll('.mode-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                document.querySelector('.mode-btn.active').classList.remove('active');
+                button.classList.add('active');
+                
+                // Update current mode
+                currentMode = button.dataset.mode;
+                
+                // Update input hint
+                inputHint.textContent = modeHints[currentMode];
+                
+                // Update input placeholder
+                userInput.placeholder = `Type your message for ${currentMode} mode...`;
+            });
+        });
 
-      // Clear input
-      userInput.value = '';
-  }
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
 
-  function addMessage(text, type) {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message', type);
-      messageDiv.textContent = text;
-      chatBox.appendChild(messageDiv);
-      
-      // Scroll to bottom
-      chatBox.scrollTop = chatBox.scrollHeight;
-  }
+            // Add user's message
+            addMessage(message, 'question', currentMode);
 
-  // Allow sending message with Enter key
-  userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-          sendMessage();
-      }
-  });
+            // Get random response for current mode
+            const modeResponseList = modeResponses[currentMode];
+            const response = modeResponseList[Math.floor(Math.random() * modeResponseList.length)];
+
+            // Add bot's answer after a short delay
+            setTimeout(() => {
+                // Simulate different responses based on mode
+                let processedResponse = response;
+                if (currentMode === 'summarize') {
+                    processedResponse += "\n" + createBriefSummary(message);
+                } else if (currentMode === 'rewrite') {
+                    processedResponse += "\n" + rewriteText(message);
+                } else {
+                    processedResponse += "\n" + expandText(message);
+                }
+                addMessage(processedResponse, 'answer', currentMode);
+            }, 500);
+
+            // Clear input
+            userInput.value = '';
+        }
+
+        function addMessage(text, type, mode) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', type);
+            
+            const modeSpan = document.createElement('span');
+            modeSpan.classList.add('message-mode');
+            modeSpan.textContent = `${mode.charAt(0).toUpperCase() + mode.slice(1)} mode`;
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = text;
+            
+            messageDiv.appendChild(modeSpan);
+            messageDiv.appendChild(textSpan);
+            chatBox.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Simulate different processing based on mode
+        function createBriefSummary(text) {
+            return `${text.split(' ').slice(0, 5).join(' ')}...`;
+        }
+
+        function rewriteText(text) {
+            return text.split('.').reverse().join('. ');
+        }
+
+        function expandText(text) {
+            return text + " [Additional context would be added here]";
+        }
+
+        // Allow sending message with Enter key
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
 
     let isProcessing = false;
     const setupMessageListener = () => {
