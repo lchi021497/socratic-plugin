@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "PDF Parser Extension",
+  "name": "Socratic",
   "version": "1.0",
   "description": "Parses PDF content in browser",
   "permissions": [

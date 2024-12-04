@@ -1,118 +1,329 @@
 (() => {
-  const chatBox = document.getElementById('chatBox');
-        const userInput = document.getElementById('userInput');
-        const inputHint = document.getElementById('inputHint');
-        let currentMode = 'write';
+  class MyHighlightManager {
+        constructor() {
+            this.highlights = new Map(); // pageNum -> highlights array
+            this.setupListeners();
+        }
 
-        const modeResponses = {
-            write: [
-                "Here's a draft based on your input:",
-                "I've written this for you:",
-                "Here's what I've composed:"
-            ],
-            rewrite: [
-                "Here's a rewritten version:",
-                "I've reformulated your text as:",
-                "Here's the revised version:"
-            ],
-            summarize: [
-                "Here's a summary:",
-                "Key points:",
-                "In brief:"
-            ]
-        };
+        setupListeners() {
+            document.addEventListener('mouseup', () => {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
 
-        const modeHints = {
-            write: "Write mode: Express your thoughts naturally",
-            rewrite: "Rewrite mode: Paste the text you want to rephrase",
-            summarize: "Summarize mode: Paste the text you want to condense"
-        };
+                const range = selection.getRangeAt(0);
+                const container = range.commonAncestorContainer.parentElement;
 
-        // Mode selection handling
-        document.querySelectorAll('.mode-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                // Update active button
-                document.querySelector('.mode-btn.active').classList.remove('active');
-                button.classList.add('active');
-                
-                // Update current mode
-                currentMode = button.dataset.mode;
-                
-                // Update input hint
-                inputHint.textContent = modeHints[currentMode];
-                
-                // Update input placeholder
-                userInput.placeholder = `Type your message for ${currentMode} mode...`;
-            });
-        });
-
-        function sendMessage() {
-            const message = userInput.value.trim();
-            if (message === '') return;
-
-            // Add user's message
-            addMessage(message, 'question', currentMode);
-
-            // Get random response for current mode
-            const modeResponseList = modeResponses[currentMode];
-            const response = modeResponseList[Math.floor(Math.random() * modeResponseList.length)];
-
-            // Add bot's answer after a short delay
-            setTimeout(() => {
-                // Simulate different responses based on mode
-                let processedResponse = response;
-                if (currentMode === 'summarize') {
-                    processedResponse += "\n" + createBriefSummary(message);
-                } else if (currentMode === 'rewrite') {
-                    processedResponse += "\n" + rewriteText(message);
-                } else {
-                    processedResponse += "\n" + expandText(message);
+                if (container) {
+                    this.handleHighlight(selection, range);
                 }
-                addMessage(processedResponse, 'answer', currentMode);
-            }, 500);
-
-            // Clear input
-            userInput.value = '';
+            });
         }
 
-        function addMessage(text, type, mode) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', type);
-            
-            const modeSpan = document.createElement('span');
-            modeSpan.classList.add('message-mode');
-            modeSpan.textContent = `${mode.charAt(0).toUpperCase() + mode.slice(1)} mode`;
-            
-            const textSpan = document.createElement('span');
-            textSpan.textContent = text;
-            
-            messageDiv.appendChild(modeSpan);
-            messageDiv.appendChild(textSpan);
-            chatBox.appendChild(messageDiv);
-            
-            // Scroll to bottom
-            chatBox.scrollTop = chatBox.scrollHeight;
+        getHighlights() {
+          return this.highlights;
         }
 
-        // Simulate different processing based on mode
-        function createBriefSummary(text) {
-            return `${text.split(' ').slice(0, 5).join(' ')}...`;
-        }
+        handleHighlight(selection, range) {
+            const highlightId = `highlight-${Date.now()}`;
+            const selectedText = selection.toString().trim();
+            if (!selectedText) return;
 
-        function rewriteText(text) {
-            return text.split('.').reverse().join('. ');
-        }
+            const rects = range.getClientRects();
+            const textLayer = range.commonAncestorContainer.closest('.textLayer');
+            console.log('common ancestor: ', range.commonAncestorContainer);
+            console.log('textLayer: ', textLayer);
+            const pdfContainer = document.getElementById('pdf-container');
+            const containerRect = pdfContainer.getBoundingClientRect();
 
-        function expandText(text) {
-            return text + " [Additional context would be added here]";
-        }
+            const pdfPage = textLayer.closest('.pdf-page');
+            const pageNumber = parseInt(pdfPage.getAttribute('data-page-number'), 10);
 
-        // Allow sending message with Enter key
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+            // Create highlight elements
+            for (const rect of rects) {
+                const highlight = document.createElement('div');
+                highlight.className = 'highlight';
+                highlight.setAttribute('data-highlight-id', highlightId);
+
+                // Position highlight
+                highlight.style.left = (rect.left - containerRect.left) + 'px';
+                highlight.style.top = (rect.top - containerRect.top) + 'px';
+                highlight.style.width = rect.width + 'px';
+                highlight.style.height = rect.height + 'px';
+
+                pdfContainer.appendChild(highlight);
             }
+
+            // Save highlight data
+            if (!this.highlights.has(pageNumber)) {
+                this.highlights.set(pageNumber, []);
+            }
+            this.highlights.get(pageNumber).push({
+                id: highlightId,
+                text: selectedText,
+                timestamp: new Date().toISOString()
+            });
+            console.log("this.highlights add: ", this.highlights);
+
+            this.updateHighlightsList();
+            this.saveHighlights();
+
+            // Clear selection
+            selection.removeAllRanges();
+        }
+
+        updateHighlightsList() {
+            const container = document.getElementById('highlights-container');
+            container.innerHTML = '';
+
+            this.highlights.forEach((pageHighlights, pageNum) => {
+                const pageSection = document.createElement('div');
+                pageSection.innerHTML = `<h4>Page ${pageNum}</h4>`;
+
+                pageHighlights.forEach(highlight => {
+                    const highlightDiv = document.createElement('div');
+                    highlightDiv.style.marginBottom = '10px';
+                    
+                    // Create timestamp div
+                    const timestampDiv = document.createElement('div');
+                    timestampDiv.style.fontSize = '0.8em';
+                    timestampDiv.style.color = '#666';
+                    timestampDiv.textContent = new Date(highlight.timestamp).toLocaleString();
+                    
+                    // Create text div
+                    const textDiv = document.createElement('div');
+                    textDiv.style.margin = '5px 0';
+                    textDiv.textContent = highlight.text;
+                    
+                    // Create remove button
+                    const removeButton = document.createElement('button');
+                    removeButton.textContent = 'Remove';
+                    
+                    // Add event listener instead of inline onclick
+                    removeButton.addEventListener('click', () => {
+                        console.log('highlights @ remove: ', this.highlights)
+                        console.log("remove pageNum: ", pageNum)
+                        this.removeHighlight(highlight.id, pageNum);
+                    });
+                    
+                    // Append all elements
+                    highlightDiv.appendChild(timestampDiv);
+                    highlightDiv.appendChild(textDiv);
+                    highlightDiv.appendChild(removeButton);
+                    pageSection.appendChild(highlightDiv);
+                });
+
+                container.appendChild(pageSection);
+            });
+            console.log("this.highlights after update: ", this.highlights);
+        }
+
+        removeHighlight(highlightId, pageNum) {
+            console.log('this.highlights: ', this.highlights);
+            // Remove highlight elements
+            const highlights = document.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
+            highlights.forEach(h => h.remove());
+
+            console.log('highlights: ', highlights);
+            
+            // Remove from data structure
+            const pageHighlights = this.highlights.get(pageNum);
+            const index = pageHighlights.findIndex(h => h.id === highlightId);
+            if (index !== -1) {
+                pageHighlights.splice(index, 1);
+                if (pageHighlights.length === 0) {
+                    this.highlights.delete(pageNum);
+                }
+            }
+
+            this.updateHighlightsList();
+            this.saveHighlights();
+        }
+
+        saveHighlights() {
+            // Convert Map to array for storage
+            const highlightsArray = Array.from(this.highlights.entries());
+            localStorage.setItem('pdfHighlights', JSON.stringify(highlightsArray));
+        }
+
+        loadHighlights() {
+            console.log('loading highlights')
+            const saved = localStorage.getItem('pdfHighlights');
+            if (saved) {
+                // Convert array back to Map
+                this.highlights = new Map(JSON.parse(saved));
+                this.updateHighlightsList();
+            }
+            console.log('loaded highlights');
+        }
+    }
+
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const inputHint = document.getElementById('inputHint');
+    let currentMode = 'write';
+    let rawText;
+    // Initialize highlight manager after page is loaded
+    window.highlightManager = new MyHighlightManager();
+    highlightManager.loadHighlights();
+
+    const modeResponses = {
+        write: [
+            "Here's a draft based on your input:",
+            "I've written this for you:",
+            "Here's what I've composed:"
+        ],
+        rewrite: [
+            "Here's a rewritten version:",
+            "I've reformulated your text as:",
+            "Here's the revised version:"
+        ],
+        summarize: [
+            "Here's a summary:",
+            "Key points:",
+            "In brief:"
+        ]
+    };
+
+    const modeHints = {
+        write: "Write mode: Express your thoughts naturally",
+        rewrite: "Rewrite mode: Paste the text you want to rephrase",
+        summarize: "Summarize mode: Paste the text you want to condense"
+    };
+
+    // Mode selection handling
+    document.querySelectorAll('.mode-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            document.querySelector('.mode-btn.active').classList.remove('active');
+            button.classList.add('active');
+            
+            // Update current mode
+            currentMode = button.dataset.mode;
+            
+            // Update input hint
+            inputHint.textContent = modeHints[currentMode];
+            
+            // Update input placeholder
+            userInput.placeholder = `Type your message for ${currentMode} mode...`;
         });
+    });
+
+    function highlightsToString() {
+      const highlights = window.highlightManager.getHighlights();
+      
+      let highlightString = "Here are the highlights that the users have noted. Highlights are passages that users have found interesting and please use the highlights as references to response:\n"
+
+      const sortedKeys = Array.from(highlights.keys()).sort((a, b) => a - b);
+      console.log('sortedKeys: ', sortedKeys);
+      for (const key of sortedKeys) {
+        highlightString += 'Page ' + key.toString() + '\n';
+        console.log("hightlights: ", highlights)
+        console.log("key: ", key)
+        console.log("highlights.get(): ", highlights.get(key))
+        for (const highlight of highlights.get(key)) {
+          console.log('highlight: ', highlight.text)
+          highlightString += '-' + highlight.text;
+        }
+      }
+
+      return highlightString;
+    }
+
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (message === '') return;
+
+        // Add user's message
+        addMessage(message, 'question', currentMode);
+
+        // Get random response for current mode
+        const modeResponseList = modeResponses[currentMode];
+        const response = modeResponseList[Math.floor(Math.random() * modeResponseList.length)];
+        const highlightString = highlightsToString();
+
+        // Add bot's answer after a short delay
+        setTimeout(async () => {
+            // Simulate different responses based on mode
+            let processedResponse = response;
+            if (currentMode === 'summarize') {
+              console.log("[SUMMARIZE] rawText: ", rawText);
+              console.log("highlights: ", window.highlightManager.getHighlights());
+              console.log("highlightString: ", highlightString);
+              const summarizer = await ai.summarizer.create({
+                sharedContext: "",
+                type: "tl;dr",
+                length: "medium"
+              });
+
+              const summary = await summarizer.summarize(highlightString, {
+                context: message
+              });
+              
+              processedResponse += "\n" + summary;
+            } else if (currentMode === 'rewrite') {
+                const rewriter = await ai.rewriter.create({
+                  sharedContext: "",
+                });
+
+                const rewriteText = await rewriter.rewrite(highlightString, {
+                  context: message
+                });
+                processedResponse += "\n" + rewriteText;
+            } else {
+                const writer = await ai.writer.create({
+                  sharedContext: "",
+                });
+
+                const writeText = await writer.write(highlightString, {
+                  context: message
+                });
+                processedResponse += "\n" + writeText;
+            }
+            addMessage(processedResponse, 'answer', currentMode);
+        }, 500);
+
+        // Clear input
+        userInput.value = '';
+    }
+
+    function addMessage(text, type, mode) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', type);
+        
+        const modeSpan = document.createElement('span');
+        modeSpan.classList.add('message-mode');
+        modeSpan.textContent = `${mode.charAt(0).toUpperCase() + mode.slice(1)} mode`;
+        
+        const textSpan = document.createElement('span');
+        textSpan.textContent = text;
+        
+        messageDiv.appendChild(modeSpan);
+        messageDiv.appendChild(textSpan);
+        chatBox.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Simulate different processing based on mode
+    function createBriefSummary(text) {
+        return `${text.split(' ').slice(0, 5).join(' ')}...`;
+    }
+
+    function rewriteText(text) {
+        return text.split('.').reverse().join('. ');
+    }
+
+    function expandText(text) {
+        return text + " [Additional context would be added here]";
+    }
+
+    // Allow sending message with Enter key
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
 
     let isProcessing = false;
     const setupMessageListener = () => {
@@ -258,160 +469,7 @@
         }
       }
 
-    class MyHighlightManager {
-        constructor() {
-            this.highlights = new Map(); // pageNum -> highlights array
-            this.setupListeners();
-        }
-
-        setupListeners() {
-            document.addEventListener('mouseup', () => {
-                const selection = window.getSelection();
-                if (!selection.rangeCount) return;
-
-                const range = selection.getRangeAt(0);
-                const container = range.commonAncestorContainer.parentElement;
-
-                if (container) {
-                    this.handleHighlight(selection, range);
-                }
-            });
-        }
-
-        handleHighlight(selection, range) {
-            const highlightId = `highlight-${Date.now()}`;
-            const selectedText = selection.toString().trim();
-            if (!selectedText) return;
-
-            const rects = range.getClientRects();
-            const textLayer = range.commonAncestorContainer.closest('.textLayer');
-            console.log('common ancestor: ', range.commonAncestorContainer);
-            console.log('textLayer: ', textLayer);
-            const pdfContainer = document.getElementById('pdf-container');
-            const containerRect = pdfContainer.getBoundingClientRect();
-
-            const pdfPage = textLayer.closest('.pdf-page');
-            const pageNumber = parseInt(pdfPage.getAttribute('data-page-number'), 10);
-
-            // Create highlight elements
-            for (const rect of rects) {
-                const highlight = document.createElement('div');
-                highlight.className = 'highlight';
-                highlight.setAttribute('data-highlight-id', highlightId);
-
-                // Position highlight
-                highlight.style.left = (rect.left - containerRect.left) + 'px';
-                highlight.style.top = (rect.top - containerRect.top) + 'px';
-                highlight.style.width = rect.width + 'px';
-                highlight.style.height = rect.height + 'px';
-
-                pdfContainer.appendChild(highlight);
-            }
-
-            // Save highlight data
-            if (!this.highlights.has(pageNumber)) {
-                this.highlights.set(pageNumber, []);
-            }
-            this.highlights.get(pageNumber).push({
-                id: highlightId,
-                text: selectedText,
-                timestamp: new Date().toISOString()
-            });
-            console.log("this.highlights add: ", this.highlights);
-
-            this.updateHighlightsList();
-            this.saveHighlights();
-
-            // Clear selection
-            selection.removeAllRanges();
-        }
-
-        updateHighlightsList() {
-            const container = document.getElementById('highlights-container');
-            container.innerHTML = '';
-
-            this.highlights.forEach((pageHighlights, pageNum) => {
-                const pageSection = document.createElement('div');
-                pageSection.innerHTML = `<h4>Page ${pageNum}</h4>`;
-
-                pageHighlights.forEach(highlight => {
-                    const highlightDiv = document.createElement('div');
-                    highlightDiv.style.marginBottom = '10px';
-                    
-                    // Create timestamp div
-                    const timestampDiv = document.createElement('div');
-                    timestampDiv.style.fontSize = '0.8em';
-                    timestampDiv.style.color = '#666';
-                    timestampDiv.textContent = new Date(highlight.timestamp).toLocaleString();
-                    
-                    // Create text div
-                    const textDiv = document.createElement('div');
-                    textDiv.style.margin = '5px 0';
-                    textDiv.textContent = highlight.text;
-                    
-                    // Create remove button
-                    const removeButton = document.createElement('button');
-                    removeButton.textContent = 'Remove';
-                    
-                    // Add event listener instead of inline onclick
-                    removeButton.addEventListener('click', () => {
-                        console.log('highlights @ remove: ', this.highlights)
-                        console.log("remove pageNum: ", pageNum)
-                        this.removeHighlight(highlight.id, pageNum);
-                    });
-                    
-                    // Append all elements
-                    highlightDiv.appendChild(timestampDiv);
-                    highlightDiv.appendChild(textDiv);
-                    highlightDiv.appendChild(removeButton);
-                    pageSection.appendChild(highlightDiv);
-                });
-
-                container.appendChild(pageSection);
-            });
-            console.log("this.highlights after update: ", this.highlights);
-        }
-
-        removeHighlight(highlightId, pageNum) {
-            console.log('this.highlights: ', this.highlights);
-            // Remove highlight elements
-            const highlights = document.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
-            highlights.forEach(h => h.remove());
-
-            console.log('highlights: ', highlights);
-            
-            // Remove from data structure
-            const pageHighlights = this.highlights.get(pageNum);
-            const index = pageHighlights.findIndex(h => h.id === highlightId);
-            if (index !== -1) {
-                pageHighlights.splice(index, 1);
-                if (pageHighlights.length === 0) {
-                    this.highlights.delete(pageNum);
-                }
-            }
-
-            this.updateHighlightsList();
-            this.saveHighlights();
-        }
-
-        saveHighlights() {
-            // Convert Map to array for storage
-            const highlightsArray = Array.from(this.highlights.entries());
-            localStorage.setItem('pdfHighlights', JSON.stringify(highlightsArray));
-        }
-
-        loadHighlights() {
-            console.log('loading highlights')
-            const saved = localStorage.getItem('pdfHighlights');
-            if (saved) {
-                // Convert array back to Map
-                this.highlights = new Map(JSON.parse(saved));
-                this.updateHighlightsList();
-            }
-            console.log('loaded highlights');
-        }
-    }
-
+    
     async function renderPage(page, pageNumber) {
         const scale = 1.0;
         const viewport = page.getViewport({ scale });
@@ -508,7 +566,7 @@
             const numPages = pdf.numPages;
 
             try {
-                const rawText = await extractPDFText(pdf, numPages);
+                rawText = await extractPDFText(pdf, numPages);
                 console.log('raw text: ', rawText);
 
                 const parser = new FlexibleReferenceParser();
@@ -520,11 +578,6 @@
             } catch (error) {
                 console.error('Error extracting PDF text:', error);
             }
-
-            // Initialize highlight manager after page is loaded
-            window.highlightManager = new MyHighlightManager();
-            highlightManager.loadHighlights();
-
           } catch (error) {
               console.error('Error loading PDF:', error);
           }

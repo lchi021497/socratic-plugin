@@ -1,0 +1,4 @@
+- textbox to query questions about highlighted regions
+- clear highlights
+- summarize references in the background, taking priority on refs mentioned in highlights
+- disable highlighting on other text
